@@ -20,7 +20,7 @@ dnf install python3 python3-tools -y
 
 1. Clone the repository to your prefered location
 ```
-
+git clone https://github.com/allamiro/cee-server.git
 ```
 
 2. Change the directory to the
