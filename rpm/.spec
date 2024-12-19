@@ -35,5 +35,5 @@ install -m 0644 systemd/cee_log_server.service %{buildroot}/usr/lib/systemd/syst
 /usr/lib/systemd/system/cee_log_server.service
 
 %changelog
-* Thu Dec 19 2024 Your Name <you@example.com> - 0.1-1
+* Thu Dec 19 2024 Tamir Suliman - 0.1-1
 - Initial RPM packaging.
