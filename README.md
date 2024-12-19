@@ -107,6 +107,16 @@ Install the built RPM:
 ```sudo systemctl start cee-server```
 
 
+9. Verify the log directory:
+
+```ls -l /var/log/cee-server/```
+
+### Uninstall the RPM
+
+If you need to remove the installed RPM:
+
+```sudo rpm -e cee-server```
+
 ## References
 
 * MITRE CEE Documentation
