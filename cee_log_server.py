@@ -38,7 +38,6 @@ logger.addHandler(handler)
 
 class CEERequestHandler(BaseHTTPRequestHandler):
     def do_PUT(self):
-        # Parse the request path
         parsed_path = urlparse(self.path)
         # We expect requests to /cee according to Isilon documentation
         if parsed_path.path != "/cee":
@@ -65,7 +64,6 @@ class CEERequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(b"OK")
 
     def do_GET(self):
-        # Simple GET handler to confirm the server is running
         if self.path == "/cee":
             self.send_response(200)
             self.end_headers()
