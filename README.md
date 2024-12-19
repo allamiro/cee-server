@@ -32,9 +32,5 @@ python3 cee_log_server.py &
 ```
 
 
-## Collecting and parsing CEE logs using python 
-
-
-
 ### References
 - [ ] https://docs.nxlog.co/integrate/cee.html
