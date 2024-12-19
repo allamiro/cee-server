@@ -1,74 +1,87 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from datetime import datetime
 import os
-import json
-import xml.etree.ElementTree as ET
-import threading
-import time
-import shutil
+import sys
+import logging
+import logging.handlers
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse
 
-# Directory to save logs
-LOG_DIR = "cee_logs"
-ROTATION_INTERVAL = 60 * 60 * 24  # Rotate logs daily
+# References:
+# - Python's http.server module documentation: https://docs.python.org/3/library/http.server.html
+# - CEE log formats and structure: MITRE CEE Specification (https://cee.mitre.org)
+# - Common Event Enabler (CEE) auditing integration guidance from Dell EMC documentation (e.g., Dell EMC Common Event Enabler 6.6)
+#   [No direct code examples; documentation available publicly from Dell/EMC and MITRE]
+#
+# Note: According to Dell EMC documentation, CEE forwards events via HTTP PUT operations to URIs like http://host:port/cee
+#       For Isilon/PowerScale integration, one might configure the CEE URI on the cluster as: http://<this_server>:8000/cee
+#
+# This script:
+# - Creates an HTTP server on port 8000.
+# - Expects to receive CEE audit events (JSON or XML) via HTTP PUT requests at /cee endpoint.
+# - Writes incoming audit event data to rotating log files stored in /data/isilon-cee/.
+# - Uses only built-in libraries (no Flask), relying on http.server and standard logging.
+# - Rotates logs daily, keeping 7 days of logs as a simple "best practice" example.
+# - This code can be run directly (e.g., `python3 cee_server.py`), and the Isilon or CEE forwarder can be configured to send logs here.
 
-def rotate_logs():
-    while True:
-        time.sleep(ROTATION_INTERVAL)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        archive_name = f"{LOG_DIR}_{timestamp}.zip"
-        shutil.make_archive(LOG_DIR, 'zip', LOG_DIR)
-        shutil.move(f"{LOG_DIR}.zip", archive_name)
-        shutil.rmtree(LOG_DIR)
-        os.makedirs(LOG_DIR, exist_ok=True)
+# Ensure the directory for storing logs exists
+LOG_DIR = "/data/isilon-cee"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-class CEELogHandler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        content_type = self.headers['Content-Type']
-        body = self.rfile.read(content_length)
-        
-        if not os.path.exists(LOG_DIR):
-            os.makedirs(LOG_DIR)
+# Set up a rotating log handler (daily rotation, keep 7 days)
+log_file_path = os.path.join(LOG_DIR, "cee_events.log")
+handler = logging.handlers.TimedRotatingFileHandler(log_file_path, when='D', interval=1, backupCount=7, encoding='utf-8')
+formatter = logging.Formatter('%(asctime)s %(message)s')
+handler.setFormatter(formatter)
 
-        try:
-            if content_type == "application/cee+json":
-                data = json.loads(body)
-                file_name = datetime.now().strftime("%Y%m%d_%H%M%S") + ".json"
-                with open(os.path.join(LOG_DIR, file_name), "w") as f:
-                    json.dump(data, f, indent=4)
+logger = logging.getLogger("CEELogger")
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
-            elif content_type == "application/cee+xml":
-                root = ET.fromstring(body)
-                file_name = datetime.now().strftime("%Y%m%d_%H%M%S") + ".xml"
-                with open(os.path.join(LOG_DIR, file_name), "wb") as f:
-                    f.write(body)
+class CEERequestHandler(BaseHTTPRequestHandler):
+    def do_PUT(self):
+        # Parse the request path
+        parsed_path = urlparse(self.path)
+        # We expect requests to /cee according to Isilon documentation
+        if parsed_path.path != "/cee":
+            self.send_error(404, "Endpoint not found")
+            return
 
-            else:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(b"Unsupported Content-Type")
-                return
+        # Read content length
+        length = int(self.headers.get('Content-Length', 0))
+        if length == 0:
+            self.send_error(400, "No data provided")
+            return
 
+        # Read the raw body (this may be JSON or XML as per CEE spec)
+        raw_data = self.rfile.read(length)
+
+        # Log the event data
+        # Just store as-is. If needed, additional validation of JSON/XML could be implemented.
+        event_str = raw_data.decode('utf-8', errors='replace')
+        logger.info(event_str)
+
+        # Respond with 200 OK
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+    def do_GET(self):
+        # Simple GET handler to confirm the server is running
+        if self.path == "/cee":
             self.send_response(200)
             self.end_headers()
-            self.wfile.write(b"Log received successfully")
-        except Exception as e:
-            self.send_response(500)
-            self.end_headers()
-            self.wfile.write(f"Error processing log: {str(e)}".encode())
+            self.wfile.write(b"CEE logging endpoint active")
+        else:
+            self.send_error(404, "Endpoint not found")
 
+    # Disable logging of every request to stderr, or redirect it
     def log_message(self, format, *args):
-        # Suppress default logging
-        return
+        # To reduce console noise, redirect server logs to a logger if desired:
+        sys.stderr.write("%s - - [%s] %s\n" % (self.address_string(),
+                                               self.log_date_time_string(),
+                                               format%args))
 
-def run_server():
-    server = HTTPServer(("", 8000), CEELogHandler)
-    print("Server started on port 8000...")
-    server.serve_forever()
-
-if __name__ == "__main__":
-    # Start the log rotation thread
-    threading.Thread(target=rotate_logs, daemon=True).start()
-
-    # Start the server
-    run_server()
+if __name__ == '__main__':
+    server_address = ('', 8000)
+    httpd = HTTPServer(server_address, CEERequestHandler)
+    print("CEE log server running on port 8000...")
+    httpd.serve_forever()
