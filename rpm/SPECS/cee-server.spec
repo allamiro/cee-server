@@ -7,7 +7,7 @@ URL: https://github.com/allamiro/cee-server
 Source0: %{name}-%{version}.tar.gz
 
 BuildArch: noarch
-Requires: python3, systemd
+Requires: python3, python3-tools, systemd
 
 %description
 CEE Server is a Python-based application that captures Common Event Expressions
@@ -25,7 +25,6 @@ mkdir -p %{buildroot}/etc/cee-server
 mkdir -p %{buildroot}/var/log/cee-server
 
 install -m 755 cee_log_server.py %{buildroot}/usr/local/bin/cee_log_server
-install -m 755 configure_service.bash %{buildroot}/usr/local/bin/configure_service
 install -m 644 LICENSE %{buildroot}/etc/cee-server/LICENSE
 install -m 644 README.md %{buildroot}/etc/cee-server/README.md
 install -m 644 rpm/SOURCES/cee-server.service %{buildroot}/usr/lib/systemd/system/cee-server.service
@@ -44,7 +43,6 @@ systemctl daemon-reload
 
 %files
 /usr/local/bin/cee_log_server
-/usr/local/bin/configure_service
 /etc/cee-server/LICENSE
 /etc/cee-server/README.md
 /usr/lib/systemd/system/cee-server.service
@@ -53,4 +51,3 @@ systemctl daemon-reload
 %changelog
 * Thu Dec 19 2024 Tamir Suliman <allamiro@gmail.com> - 1.0-1
 - Initial package release
-- Added support for creating and cleaning up the log directory at /var/log/cee-server
