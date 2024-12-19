@@ -28,7 +28,6 @@ ExecStart=${PYTHON_PATH} ${SCRIPT_PATH}
 Restart=on-failure
 User=nobody
 Group=nobody
-WorkingDirectory=/data/isilon-cee
 
 [Install]
 WantedBy=multi-user.target
