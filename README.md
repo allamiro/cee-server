@@ -35,7 +35,9 @@ python3 cee_log_server.py
 3. If you want to create a service file which would allow the script to run non stop
 
 ```
+chmod +x configure_service.bash
 
+./configure_service.bash
 
 ```
 
