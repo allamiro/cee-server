@@ -23,6 +23,7 @@ CEE Server is a Python-based application that captures Common Event Expressions
 mkdir -p %{buildroot}/usr/local/bin
 mkdir -p %{buildroot}/etc/cee-server
 mkdir -p %{buildroot}/var/log/cee-server
+mkdir -p %{buildroot}/usr/lib/systemd/system
 
 install -m 755 cee_log_server.py %{buildroot}/usr/local/bin/cee_log_server
 install -m 644 LICENSE %{buildroot}/etc/cee-server/LICENSE
