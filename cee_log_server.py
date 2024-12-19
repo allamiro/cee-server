@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 # - Writes incoming audit event data to rotating log files stored in /data/isilon-cee/.
 # - Uses only built-in libraries (no Flask), relying on http.server and standard logging.
 # - Rotates logs daily, keeping 7 days of logs as a simple "best practice" example.
-# - This code can be run directly (e.g., `python3 cee_server.py`), and the Isilon or CEE forwarder can be configured to send logs here.
+# - This code can be run directly (e.g., `python3 cee_log_server.py`), and the Isilon or CEE forwarder can be configured to send logs here.
 
 # Ensure the directory for storing logs exists
 LOG_DIR = "/data/isilon-cee"
