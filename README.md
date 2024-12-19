@@ -9,3 +9,7 @@ CEE was developed by MITRE as an extension for Syslog, based on JSON. MITRE’s 
 
 ## Collecting and parsing CEE logs using python 
 
+
+
+### References
+- [ ] https://docs.nxlog.co/integrate/cee.html
