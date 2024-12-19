@@ -1,5 +1,6 @@
 import os
 import sys
+import signal
 import logging
 import logging.handlers
 import json
@@ -16,6 +17,7 @@ from xml.etree.ElementTree import ParseError, fromstring
 # - Expects to receive CEE audit events (JSON or XML) via HTTP PUT requests at /cee endpoint.
 # - Writes incoming audit event data to separate log files based on format (JSON or XML).
 # - Validates incoming JSON and XML for correctness and rejects malformed requests.
+# - Gracefully shuts down on SIGINT/SIGTERM, allowing ongoing requests to complete and flushing logs.
 
 LOG_DIR = "/var/log/cee-server/"
 try:
@@ -93,11 +95,23 @@ class CEERequestHandler(BaseHTTPRequestHandler):
                                                self.log_date_time_string(),
                                                format%args))
 
+def graceful_shutdown(signum, frame):
+    httpd.shutdown()  # allow current requests to complete
+    httpd.server_close()
+    logging.shutdown()  # flush and close all log handlers
+
 if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CEERequestHandler)
-    try: 
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, graceful_shutdown)
+    signal.signal(signal.SIGTERM, graceful_shutdown)
+
+    try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
-    httpd.server_close()
+    finally:
+        httpd.server_close()
+        logging.shutdown()
