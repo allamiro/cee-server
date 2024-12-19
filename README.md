@@ -15,6 +15,23 @@ CEE was developed by MITRE as an extension for Syslog, based on JSON. MITRE’s 
 dnf install python3 python3-tools -y
 ```
 
+
+### How to use the tool
+
+1. Clone the repository to your prefered location
+```
+
+```
+
+2. Change the directory to the
+
+```
+cd cee-server
+python3 cee_log_server.py &
+
+```
+
+
 ## Collecting and parsing CEE logs using python 
 
 
