@@ -1,46 +1,90 @@
-# CEE Server  using python
+# CEE Server Using Python
 
-## What is Common Event Expression (CEE)
+## What is Common Event Expression (CEE)?
+CEE was developed by MITRE as an extension for Syslog, based on JSON. MITRE’s work on CEE was discontinued in 2013. Below is an example of a CEE log message:
 
-CEE was developed by MITRE as an extension for Syslog, based on JSON. MITRE’s work on CEE was discontinued in 2013.
-
-
-```Dec 20 12:42:20 syslog-relay serveapp[1335]: @cee: {"pri":10,"id":121,"appname":"serveapp","pid":1335,"host":"syslog-relay","time":"2011-12-20T12:38:05.123456-05:00","action":"login","domain":"app","object":"account","status":"success"}```
-
-
-### Required Tools
-
-* On Redhat / CentOS / Fedora
 ```
+Dec 20 12:42:20 syslog-relay serveapp[1335]: @cee: {"pri":10,"id":121,"appname":"serveapp","pid":1335,"host":"syslog-relay","time":"2011-12-20T12:38:05.123456-05:00","action":"login","domain":"app","object":"account","status":"success"}
+```
+## Required Tools
+
+To set up the CEE Server on Redhat/CentOS/Fedora systems, ensure the following tools are installed:
+
+```dnf install python3 python3-tools -y ```
+
+## How to Use the Tool
+### Run Manually
+
+1. Clone the Repository
+
+Clone the repository to your preferred location:
+
+```git clone https://github.com/allamiro/cee-server.git```
+
+2. Navigate to the Directory and Run the Script
+
+Change the directory to the cee-server directory and run the script:
+
+```cd cee-server```
+
+```python3 cee_log_server.py```
+
+3. Create a Service for Continuous Execution (Optional)
+
+If you want the script to run as a persistent service:
+
+* Make the ```configure_service.bash``` script executable:
+
+```chmod +x configure_service.bash```
+
+* Execute the script to create the service:
+
+```./configure_service.bash ```
+
+This will create and enable a systemd service for the CEE server.
+
+# CEE Server Using Python
+
+## What is Common Event Expression (CEE)?
+CEE was developed by MITRE as an extension for Syslog, based on JSON. MITRE’s work on CEE was discontinued in 2013. Below is an example of a CEE log message:
+
+```plaintext
+Dec 20 12:42:20 syslog-relay serveapp[1335]: @cee: {"pri":10,"id":121,"appname":"serveapp","pid":1335,"host":"syslog-relay","time":"2011-12-20T12:38:05.123456-05:00","action":"login","domain":"app","object":"account","status":"success"}
+
+Required Tools
+
+To set up the CEE Server on Redhat/CentOS/Fedora systems, ensure the following tools are installed:
+
 dnf install python3 python3-tools -y
-```
 
+How to Use the Tool
+Run Manually
 
-### How to use the tool
+    Clone the Repository
+    Clone the repository to your preferred location:
 
-1. Clone the repository to your prefered location
-```
 git clone https://github.com/allamiro/cee-server.git
-```
 
-2. Change the directory to the CEE Server directory and run the script
+Navigate to the Directory and Run the Script
+Change the directory to the cee-server directory and run the script:
 
-```
-cd cee-server
-python3 cee_log_server.py 
+```cd cee-server```
+```python3 cee_log_server.py```
+Create a Service for Continuous Execution (Optional)
+If you want the script to run as a persistent service:
 
-```
+    Make the configure_service.bash script executable:
 
-
-3. If you want to create a service file which would allow the script to run non stop
-
-```
 chmod +x configure_service.bash
 
-./configure_service.bash
+Execute the script to create the service:
 
-```
+        ./configure_service.bash
 
+This will create and enable a systemd service for the CEE server.
 
-### References
-- [ ] https://docs.nxlog.co/integrate/cee.html
+## Build and Deploy the RPM
+Steps to Build the RPM
+
+    Install Required Tools
+    Install the RPM build tools:
