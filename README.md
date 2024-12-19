@@ -23,11 +23,19 @@ dnf install python3 python3-tools -y
 git clone https://github.com/allamiro/cee-server.git
 ```
 
-2. Change the directory to the
+2. Change the directory to the CEE Server directory and run the script
 
 ```
 cd cee-server
-python3 cee_log_server.py &
+python3 cee_log_server.py 
+
+```
+
+
+3. If you want to create a service file which would allow the script to run non stop
+
+```
+
 
 ```
 
