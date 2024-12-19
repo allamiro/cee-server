@@ -23,8 +23,13 @@ from urllib.parse import urlparse
 # - This code can be run directly (e.g., `python3 cee_log_server.py`), and the Isilon or CEE forwarder can be configured to send logs here.
 
 # Ensure the directory for storing logs exists
-LOG_DIR = "/data/isilon-cee"
-os.makedirs(LOG_DIR, exist_ok=True)
+LOG_DIR = "/var/log/cee-server/"
+
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+except OSError as e:
+    print(f"Failed to create log directory {LOG_DIR}: {e}", file=sys.stderr)
+    sys.exit(1)
 
 # Set up a rotating log handler (daily rotation, keep 7 days)
 log_file_path = os.path.join(LOG_DIR, "cee_events.log")
