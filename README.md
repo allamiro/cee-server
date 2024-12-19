@@ -43,3 +43,42 @@ If you want the script to run as a persistent service:
 
 This will create and enable a systemd service for the CEE server.
 
+## Build and Deploy the RPM
+
+### Steps to Build the RPM
+
+1. Install Required Tools
+
+* Install the RPM build tools:
+
+``` sudo dnf install rpm-build rpmlint -y ```
+
+2. Set Up the RPM Build Environment
+
+* Create the directory structure for RPM packaging:
+
+```mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}```
+
+3. Create the Source Tarball
+
+Package the repository into a tarball:
+
+```
+cd cee-server
+mkdir cee-server-1.0
+cp -r ./* cee-server-1.0/
+tar --exclude-vcs -czf ~/rpmbuild/SOURCES/cee-server-1.0.tar.gz cee-server-1.0
+rm -rf cee-server-1.0
+```
+
+4. Copy the Spec File
+Place the spec file in the appropriate directory:
+
+```cp rpm/SPECS/cee-server.spec ~/rpmbuild/SPECS/```
+
+5. Build the RPM
+Run the RPM build process:
+
+```cd ~/rpmbuild/SPECS
+rpmbuild -ba cee-server.spec
+```
