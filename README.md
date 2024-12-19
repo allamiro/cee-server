@@ -72,13 +72,36 @@ rm -rf cee-server-1.0
 ```
 
 4. Copy the Spec File
+
 Place the spec file in the appropriate directory:
 
 ```cp rpm/SPECS/cee-server.spec ~/rpmbuild/SPECS/```
 
 5. Build the RPM
+
 Run the RPM build process:
 
 ```cd ~/rpmbuild/SPECS
 rpmbuild -ba cee-server.spec
 ```
+
+5. Verify the RPM
+
+Check if the RPM was created successfully:
+
+```ls ~/rpmbuild/RPMS/noarch/```
+
+6. Install and Test the RPM
+
+Install the built RPM:
+
+```sudo rpm -ivh ~/rpmbuild/RPMS/noarch/cee-server-1.0-1.noarch.rpm```
+
+7. Verify the systemd service is installed and enabled:
+
+
+```systemctl status cee-server```
+
+8. Start the service if it is not running:
+
+```sudo systemctl start cee-server```
