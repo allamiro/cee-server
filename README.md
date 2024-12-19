@@ -105,3 +105,9 @@ Install the built RPM:
 8. Start the service if it is not running:
 
 ```sudo systemctl start cee-server```
+
+
+## References
+
+* MITRE CEE Documentation
+* NXLog Integration with CEE
