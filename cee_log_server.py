@@ -24,6 +24,7 @@ import configparser
 # 1. Check running processes: lsof -i :8000 or netstat -anp | grep 8000
 # 2. Kill lingering processes: kill -9 <PID>
 
+# Sample config.ini:
 config = configparser.ConfigParser()
 config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
 if not os.path.exists(config_path):
