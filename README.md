@@ -24,9 +24,10 @@ Clone the repository to your preferred location:
 
 2. Navigate to the Directory and Run the Script
 
-Change the directory to the cee-server directory and run the script:
-
+* Change the directory to the cee-server directory 
 ```cd cee-server```
+
+* Update the config.ini file  with your log location if needed  then run the script:
 
 ```python3 cee_log_server.py```
 
@@ -76,6 +77,10 @@ curl -X PUT \
   -d 'This is a plain text log message.' \
   http://localhost:8000/cee
 ```
+
+
+## Enable SSL
+
 
 
 ## Build and Deploy the RPM
