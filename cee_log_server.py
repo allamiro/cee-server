@@ -4,19 +4,41 @@ import signal
 import logging
 import logging.handlers
 import json
+import ssl
+import socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 from xml.etree.ElementTree import ParseError, fromstring
+import configparser
 
 # This script:
-# - Creates an HTTP server on port 8000.
-# - Expects to receive CEE audit events (JSON, XML, or plain text) via HTTP PUT requests at /cee endpoint.
-# - Writes incoming audit event data to separate log files based on format (json, xml, text).
-# - Validates incoming JSON and XML for correctness and rejects malformed requests.
-# - For text/plain content, data is logged as-is without validation.
-# - Gracefully shuts down on SIGINT/SIGTERM, allowing ongoing requests to complete and flushing logs.
+# - Reads settings from config.ini
+# - Creates an HTTP server on port 8000 (default).
+# - Optionally enables SSL based on config.
+# - Expects to receive CEE audit events (JSON, XML, text) via PUT requests at /cee.
+# - Logs events into separate files based on their type.
+# - Validates JSON/XML; logs text as-is.
+# - Gracefully handles Ctrl+C and SIGTERM, ensuring port reuse.
 
-LOG_DIR = "/Users/ghost/Desktop/GIT-PROJECTS/cee-server/"
+# If you see "Address already in use" errors after a Ctrl+C:
+# 1. Check running processes: lsof -i :8000 or netstat -anp | grep 8000
+# 2. Kill lingering processes: kill -9 <PID>
+
+config = configparser.ConfigParser()
+config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+if not os.path.exists(config_path):
+    print(f"No config file found at {config_path}. Please create one.", file=sys.stderr)
+    sys.exit(1)
+
+config.read(config_path)
+
+LOG_DIR = config.get('server', 'log_dir', fallback='/Users/ghost/Desktop/GIT-PROJECTS/cee-server/')
+SSL_ENABLED = config.getboolean('server', 'ssl', fallback=False)
+SSL_VERIFY = config.getboolean('server', 'ssl_verify', fallback=False)
+SSL_CA = config.get('server', 'ssl_ca', fallback='')
+SSL_CERT = config.get('server', 'ssl_cert', fallback='')
+SSL_KEY = config.get('server', 'ssl_key', fallback='')
+
 try:
     os.makedirs(LOG_DIR, exist_ok=True)
 except OSError as e:
@@ -30,7 +52,8 @@ def setup_logger(log_type):
     handler.setFormatter(formatter)
     logger = logging.getLogger(log_type)
     logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
+    if not logger.handlers:
+        logger.addHandler(handler)
     return logger
 
 json_logger = setup_logger("json")
@@ -107,13 +130,25 @@ class CEERequestHandler(BaseHTTPRequestHandler):
                                                format%args))
 
 def graceful_shutdown(signum, frame):
-    httpd.shutdown()  # allow current requests to complete
+    httpd.shutdown()
     httpd.server_close()
-    logging.shutdown()  # flush and close all log handlers
+    logging.shutdown()
 
 if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CEERequestHandler)
+    # Allow immediate reuse of the port after the server stops
+    httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # If SSL is enabled, wrap the server socket with SSL
+    if SSL_ENABLED:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=SSL_CERT, keyfile=SSL_KEY)
+        if SSL_VERIFY:
+            context.verify_mode = ssl.CERT_REQUIRED
+            if SSL_CA:
+                context.load_verify_locations(SSL_CA)
+        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
     # Register signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, graceful_shutdown)
@@ -124,5 +159,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
+        httpd.shutdown()
         httpd.server_close()
         logging.shutdown()
