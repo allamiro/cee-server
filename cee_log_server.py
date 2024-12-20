@@ -19,7 +19,7 @@ from xml.etree.ElementTree import ParseError, fromstring
 # - Validates incoming JSON and XML for correctness and rejects malformed requests.
 # - Gracefully shuts down on SIGINT/SIGTERM, allowing ongoing requests to complete and flushing logs.
 
-LOG_DIR = "/var/log/cee-server/"
+LOG_DIR = "/Users/ghost/Desktop/GIT-PROJECTS/cee-server/"
 try:
     os.makedirs(LOG_DIR, exist_ok=True)
 except OSError as e:
