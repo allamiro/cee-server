@@ -13,7 +13,8 @@ To set up the CEE Server on Redhat/CentOS/Fedora systems, ensure the following t
 ```dnf install python3 python3-tools -y ```
 
 ## How to Use the Tool
-### Run Manually
+
+### How to Run Manually
 
 1. Clone the Repository
 
@@ -43,8 +44,41 @@ If you want the script to run as a persistent service:
 
 This will create and enable a systemd service for the CEE server.
 
-## Build and Deploy the RPM
 
+
+4. To validate with different types of CEE data
+
+* Send JSON Data:
+
+```
+curl -X PUT \
+  -H "Content-Type: application/json" \
+  -d '{"host":"system.example.com","pname":"auth","time":"2011-12-20T12:38:05.123456-05:00"}' \
+  http://localhost:8000/cee
+```
+
+* Send XML Data:
+
+```
+curl -X PUT \
+  -H "Content-Type: application/xml" \
+  -d '<cee:cee xmlns:cee="http://cee.mitre.org/1.0/"><cee:event><host>system.example.com</host><pname>auth</pname><time>2011-12-20T12:38:05.123456-05:00</time></cee:event></cee:cee>' \
+  http://localhost:8000/cee
+```
+
+
+
+* Send Plain Text Data:
+
+```
+curl -X PUT \
+  -H "Content-Type: text/plain" \
+  -d 'This is a plain text log message.' \
+  http://localhost:8000/cee
+```
+
+
+## Build and Deploy the RPM
 ### Steps to Build the RPM
 
 1. Install Required Tools
