@@ -8,15 +8,12 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 from xml.etree.ElementTree import ParseError, fromstring
 
-# References:
-# - Python's http.server module documentation: https://docs.python.org/3/library/http.server.html
-# - CEE log formats and structure: MITRE CEE Specification (https://cee.mitre.org)
-#
 # This script:
 # - Creates an HTTP server on port 8000.
-# - Expects to receive CEE audit events (JSON or XML) via HTTP PUT requests at /cee endpoint.
-# - Writes incoming audit event data to separate log files based on format (JSON or XML).
+# - Expects to receive CEE audit events (JSON, XML, or plain text) via HTTP PUT requests at /cee endpoint.
+# - Writes incoming audit event data to separate log files based on format (json, xml, text).
 # - Validates incoming JSON and XML for correctness and rejects malformed requests.
+# - For text/plain content, data is logged as-is without validation.
 # - Gracefully shuts down on SIGINT/SIGTERM, allowing ongoing requests to complete and flushing logs.
 
 LOG_DIR = "/Users/ghost/Desktop/GIT-PROJECTS/cee-server/"
@@ -38,6 +35,7 @@ def setup_logger(log_type):
 
 json_logger = setup_logger("json")
 xml_logger = setup_logger("xml")
+text_logger = setup_logger("text")
 
 def is_valid_json(data):
     try:
@@ -67,15 +65,27 @@ class CEERequestHandler(BaseHTTPRequestHandler):
 
         raw_data = self.rfile.read(length)
         event_str = raw_data.decode('utf-8', errors='replace')
+        content_type = self.headers.get('Content-Type', '')
 
-        if is_valid_json(event_str):
-            json_logger.info(event_str)
-            log_type = "json"
-        elif is_valid_xml(event_str):
-            xml_logger.info(event_str)
-            log_type = "xml"
+        if "application/json" in content_type:
+            if is_valid_json(event_str):
+                json_logger.info(event_str)
+                log_type = "json"
+            else:
+                self.send_error(400, "Invalid JSON format.")
+                return
+        elif "application/xml" in content_type or "text/xml" in content_type:
+            if is_valid_xml(event_str):
+                xml_logger.info(event_str)
+                log_type = "xml"
+            else:
+                self.send_error(400, "Invalid XML format.")
+                return
+        elif "text/plain" in content_type:
+            text_logger.info(event_str)
+            log_type = "text"
         else:
-            self.send_error(400, "Invalid CEE format. Only JSON and XML are supported.")
+            self.send_error(400, "Unsupported content type. Use JSON, XML, or plain text.")
             return
 
         self.send_response(200)
@@ -91,6 +101,7 @@ class CEERequestHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Endpoint not found")
 
     def log_message(self, format, *args):
+        # Override to reduce console output noise
         sys.stderr.write("%s - - [%s] %s\n" % (self.address_string(),
                                                self.log_date_time_string(),
                                                format%args))
