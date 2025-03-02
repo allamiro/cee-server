@@ -131,9 +131,11 @@ class CEERequestHandler(BaseHTTPRequestHandler):
                                                format%args))
 
 def graceful_shutdown(signum, frame):
+    print("Shutting down server...")
     httpd.shutdown()
     httpd.server_close()
     logging.shutdown()
+    sys.exit(0)
 
 if __name__ == '__main__':
     server_address = ('', 8000)
@@ -150,6 +152,9 @@ if __name__ == '__main__':
             if SSL_CA:
                 context.load_verify_locations(SSL_CA)
         httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+        print("Secure CEE Log Server running on https://localhost:8000")
+    else:
+        print("CEE Log Server running on http://localhost:8000")
 
     # Register signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, graceful_shutdown)
@@ -163,3 +168,4 @@ if __name__ == '__main__':
         httpd.shutdown()
         httpd.server_close()
         logging.shutdown()
+        print("Server shut down.")
